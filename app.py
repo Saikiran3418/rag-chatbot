@@ -133,6 +133,14 @@ Answer:""")
 
 # ---- PROCESS BUTTON CLICKED ----
 if process_btn and uploaded_file is not None:
+    # clear everything from previous document
+    if "chain" in st.session_state:
+        del st.session_state.chain
+    if "messages" in st.session_state:
+        del st.session_state.messages
+    if "doc_name" in st.session_state:
+        del st.session_state.doc_name
+
     with st.spinner("Processing your PDF... please wait!"):
         vectorstore = process_pdf(uploaded_file)
         st.session_state.chain = build_chain(vectorstore)
