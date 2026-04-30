@@ -2,6 +2,7 @@
 import streamlit as st
 import tempfile
 import os
+import shutil
 from dotenv import load_dotenv
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -13,6 +14,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # load API key
 load_dotenv()
+if "OPENAI_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # page settings
 st.set_page_config(
@@ -53,6 +56,10 @@ with st.sidebar:
 
 # ---- PROCESS UPLOADED PDF ----
 def process_pdf(uploaded_file):
+    # clear old database first
+    if os.path.exists("data/chroma_db_upload"):
+        shutil.rmtree("data/chroma_db_upload")
+
     # save uploaded file temporarily
     with tempfile.NamedTemporaryFile(
         delete=False, suffix=".pdf"
@@ -70,7 +77,7 @@ def process_pdf(uploaded_file):
     )
     chunks = splitter.split_documents(pages)
 
-    # create vector store
+    # create fresh vector store
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-small"
     )
@@ -139,7 +146,6 @@ if process_btn and uploaded_file is not None:
 
 # ---- CHAT INTERFACE ----
 if "chain" not in st.session_state:
-    # no document uploaded yet
     st.info(
         "👈 Upload a PDF in the sidebar to get started!"
     )
