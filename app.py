@@ -2,7 +2,6 @@
 import streamlit as st
 import tempfile
 import os
-import shutil
 from dotenv import load_dotenv
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -56,10 +55,6 @@ with st.sidebar:
 
 # ---- PROCESS UPLOADED PDF ----
 def process_pdf(uploaded_file):
-    # clear old database first
-    if os.path.exists("data/chroma_db_upload"):
-        shutil.rmtree("data/chroma_db_upload")
-
     # save uploaded file temporarily
     with tempfile.NamedTemporaryFile(
         delete=False, suffix=".pdf"
@@ -77,14 +72,15 @@ def process_pdf(uploaded_file):
     )
     chunks = splitter.split_documents(pages)
 
-    # create fresh vector store
+    # create IN-MEMORY vector store (works on cloud!)
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-small"
     )
+
+    # no persist_directory = stays in memory only
     vectorstore = Chroma.from_documents(
         documents=chunks,
         embedding=embeddings,
-        persist_directory="data/chroma_db_upload"
     )
 
     # clean up temp file
